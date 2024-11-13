@@ -26,12 +26,15 @@ class CustomHandler(http.server.CGIHTTPRequestHandler):
                 with open(image_name, "rb") as image_file:
                     self.wfile.write(image_file.read())
             else:
-                # Send 404 error if the image doesn't exist
-                self.send_response(404)
-                self.send_header("Content-type", "text/html")
+                # Send default image if the image doesn't exist
+                image_name = "default.jpeg"
+                self.send_response(200)
+                self.send_header("Content-type", "image/jpeg")
                 self.end_headers()
-                self.wfile.write(b"<h1>404 Not Found</h1>")
-                self.wfile.write(f"<p>L'image '{image_name}' n'existe pas sur le serveur.</p>".encode("utf-8"))
+                with open(image_name, "rb") as image_file:
+                    self.wfile.write(image_file.read())
+                    self.wfile.write(b"<h1>give default image</h1>")
+                    self.wfile.write(f"<p>L'image '{image_name}' n'existe pas sur le serveur.</p>".encode("utf-8"))
         else:
             # Handle other POST requests if needed
             super().do_POST()
