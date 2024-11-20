@@ -11,12 +11,17 @@ cgitb.enable()
 PORT = 8888
 CENTRAL_SERVER_URL = "http://localhost:8889/get_image"  # URL for the central server
 SERVER_BASE = "server_base"  # Directory to store images locally
+DB_SIZE = 5
 
 # Ensure the server_base directory exists
 os.makedirs(SERVER_BASE, exist_ok=True)
 
 class CustomHandler(http.server.CGIHTTPRequestHandler):
+
+    server_DB = os.listdir(SERVER_BASE)
+
     def do_POST(self):
+        #print(self.server_DB)
         if self.path == "/server.py":
             # Handle form submission
             form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={'REQUEST_METHOD': 'POST'})
@@ -34,6 +39,7 @@ class CustomHandler(http.server.CGIHTTPRequestHandler):
                     self.end_headers()
                     with open(local_image_path, "rb") as image_file:
                         self.wfile.write(image_file.read())
+                    self.server_DB.insert(0, self.server_DB.pop(self.server_DB.index(image_name))) #updates list
                 else:
                     # Fetch image from central server
                     response = requests.get(CENTRAL_SERVER_URL, params={"name": image_name})
@@ -45,6 +51,11 @@ class CustomHandler(http.server.CGIHTTPRequestHandler):
                         self.send_header("Content-type", "image/jpeg")
                         self.end_headers()
                         self.wfile.write(response.content)
+                        #updates list and repertory
+                        self.server_DB.insert(0, image_name)
+                        file_to_delete = self.server_DB.pop(DB_SIZE)
+                        os.remove( os.path.join(SERVER_BASE, file_to_delete))
+
                     else:
                         # If central server also doesn't have the image
                         self.send_response(404)
@@ -61,6 +72,8 @@ class CustomHandler(http.server.CGIHTTPRequestHandler):
                 self.wfile.write(b"<p>No image name was provided.</p>")
         else:
             super().do_POST()
+
+
 
 # Start the server
 server_address = ("", PORT)
