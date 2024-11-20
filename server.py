@@ -21,7 +21,7 @@ class CustomHandler(http.server.CGIHTTPRequestHandler):
     server_DB = os.listdir(SERVER_BASE)
 
     def do_POST(self):
-        #print(self.server_DB)
+        print("Fichiers présents dans le serveur replica avant requête:", self.server_DB)
         if self.path == "/server.py":
             # Handle form submission
             form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={'REQUEST_METHOD': 'POST'})
@@ -40,6 +40,9 @@ class CustomHandler(http.server.CGIHTTPRequestHandler):
                     with open(local_image_path, "rb") as image_file:
                         self.wfile.write(image_file.read())
                     self.server_DB.insert(0, self.server_DB.pop(self.server_DB.index(image_name))) #updates list
+                    print("Fichiers présents dans le serveur replica après requête:", self.server_DB)
+
+                    
                 else:
                     # Fetch image from central server
                     response = requests.get(CENTRAL_SERVER_URL, params={"name": image_name})
@@ -53,8 +56,15 @@ class CustomHandler(http.server.CGIHTTPRequestHandler):
                         self.wfile.write(response.content)
                         #updates list and repertory
                         self.server_DB.insert(0, image_name)
-                        file_to_delete = self.server_DB.pop(DB_SIZE)
+                        try :
+                            file_to_delete = self.server_DB.pop(DB_SIZE)
+                            print("Deleting "+ str(file_to_delete))
+                            print("Fichiers présents dans le serveur replica après requête:", self.server_DB)
+                        except IndexError :
+                            print("Moins de ", DB_SIZE," images dans la serveur replica")
+                            return
                         os.remove( os.path.join(SERVER_BASE, file_to_delete))
+                        
 
                     else:
                         # If central server also doesn't have the image
