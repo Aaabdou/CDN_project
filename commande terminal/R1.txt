@@ -1,14 +1,14 @@
 en
 conf t
-int g
+int g1/0
 	ip addr 194.0.7.2 255.255.255.0
 	no shutdown
 	exit
-int g
+int g3/0
 	ip addr 194.0.8.1 255.255.255.0
 	no shutdown
 	exit
-int g
+int g2/0
 	ip addr 133.8.7.1 255.255.255.0
 	no shutdown
 	exit
