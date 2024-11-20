@@ -1,4 +1,4 @@
-# server.py
+# server1.py
 import http.server
 import cgi
 import os
@@ -10,26 +10,26 @@ cgitb.enable()
 
 PORT = 8888
 CENTRAL_SERVER_URL = "http://localhost:8889/get_image"  # URL for the central server
-SERVER_BASE = "server_base"  # Directory to store images locally
-DB_SIZE = 5
+SERVER_BASE_1 = "server_base_1"  # Directory to store images locally
+DB_SIZE_1 = 5
 
 # Ensure the server_base directory exists
-os.makedirs(SERVER_BASE, exist_ok=True)
+os.makedirs(SERVER_BASE_1, exist_ok=True)
 
 class CustomHandler(http.server.CGIHTTPRequestHandler):
 
-    server_DB = os.listdir(SERVER_BASE)
+    server_DB_1 = os.listdir(SERVER_BASE_1)
 
     def do_POST(self):
-        print("Fichiers présents dans le serveur replica avant requête:", self.server_DB)
-        if self.path == "/server.py":
+        print("Fichiers présents dans le serveur replica avant requête:", self.server_DB_1)
+        if self.path == "/server_1.py":
             # Handle form submission
             form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={'REQUEST_METHOD': 'POST'})
             image_name = form.getvalue("name")
             
             if image_name:
                 # Path to the local image in server_base
-                local_image_path = os.path.join(SERVER_BASE, image_name)
+                local_image_path = os.path.join(SERVER_BASE_1, image_name)
 
                 # Check if image exists locally
                 if os.path.isfile(local_image_path):
@@ -39,8 +39,8 @@ class CustomHandler(http.server.CGIHTTPRequestHandler):
                     self.end_headers()
                     with open(local_image_path, "rb") as image_file:
                         self.wfile.write(image_file.read())
-                    self.server_DB.insert(0, self.server_DB.pop(self.server_DB.index(image_name))) #updates list
-                    print("Fichiers présents dans le serveur replica après requête:", self.server_DB)
+                    self.server_DB_1.insert(0, self.server_DB_1.pop(self.server_DB_1.index(image_name))) #updates list
+                    print("Fichiers présents dans le serveur replica après requête:", self.server_DB_1)
 
                     
                 else:
@@ -55,15 +55,15 @@ class CustomHandler(http.server.CGIHTTPRequestHandler):
                         self.end_headers()
                         self.wfile.write(response.content)
                         #updates list and repertory
-                        self.server_DB.insert(0, image_name)
+                        self.server_DB_1.insert(0, image_name)
                         try :
-                            file_to_delete = self.server_DB.pop(DB_SIZE)
+                            file_to_delete = self.server_DB_1.pop(DB_SIZE_1)
                             print("Deleting "+ str(file_to_delete))
-                            print("Fichiers présents dans le serveur replica après requête:", self.server_DB)
+                            print("Fichiers présents dans le serveur replica après requête:", self.server_DB_1)
                         except IndexError :
-                            print("Moins de ", DB_SIZE," images dans la serveur replica")
+                            print("Moins de ", DB_SIZE_1," images dans la serveur replica")
                             return
-                        os.remove( os.path.join(SERVER_BASE, file_to_delete))
+                        os.remove( os.path.join(SERVER_BASE_1, file_to_delete))
                         
 
                     else:
@@ -85,10 +85,10 @@ class CustomHandler(http.server.CGIHTTPRequestHandler):
 
 
 
-# Start the server
-server_address = ("", PORT)
+# Start the server_1
+server_address_1 = ("", PORT)
 handler = CustomHandler
 handler.cgi_directories = ["/"]
-httpd = http.server.HTTPServer(server_address, handler)
+httpd = http.server.HTTPServer(server_address_1, handler)
 print(f"Server active on port {PORT}")
 httpd.serve_forever()
