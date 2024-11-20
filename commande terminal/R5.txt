@@ -1,12 +1,10 @@
-R5
-
 en
 conf t		
-int g
+int g2/0
 	ip addr 194.0.9.2 255.255.255.0
 	no shutdown
 	exit
-int g
+int g1/0
 	ip addr 194.0.1.2 255.255.255.0
 	no shutdown
 	exit	

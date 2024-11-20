@@ -14,3 +14,5 @@ router bgp 64071
 	neighbor 193.8.7.1 remote-as 64007
 	network 197.8.7.0 mask 255.255.255.0
 exit
+
+do sh run
