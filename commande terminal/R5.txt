@@ -12,3 +12,6 @@ int g1/0
 router bgp 64073
 	neighbor 194.0.9.1 remote-as 64007
 	neighbor 194.0.1.1 remote-as 64072
+	network 194.0.9.0 mask 255.255.255.0
+	network 194.0.1.0 mask 255.255.255.0
+exit

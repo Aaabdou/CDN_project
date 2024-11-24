@@ -24,3 +24,4 @@ router bgp 64007
 
 	network 194.0.7.0 mask 255.255.255.0
 	network 194.0.8.0 mask 255.255.255.0
+	exit
