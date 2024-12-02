@@ -19,6 +19,41 @@ if not os.path.exists(CACHE_TABLE_1):
 
 class CustomHandler(http.server.BaseHTTPRequestHandler):
 
+    server_1_DB = os.listdir(SERVER_BASE_1)
+
+    """Initialise the server's database by checking if it has an appropriate number of file. If not, arbitrarly 
+    remove excedent files."""
+    server_1_DB = os.listdir(SERVER_BASE_1)
+    while len(server_1_DB) > DB_SIZE_1 : 
+        file_to_delete = server_1_DB.pop(0)
+        os.remove( os.path.join(SERVER_BASE_1, file_to_delete))
+
+    print("Initial DB state:", server_1_DB)
+
+    """def _init_(self):
+        Initialise the server's database by checking if it has an appropriate number of file. If not, arbitrarly 
+        remove excedent files.
+        while len(self.server_1_DB) > DB_SIZE_1 : 
+            self.server_1_DB.pop(0)
+
+        print("Initial DB state:", self.server_1_DB)"""
+
+    def update_FIFO_file_list(self, image_name):
+        """If the Database has reached the maximum number of files stored given by DB_SIZE_1, the oldest file 
+        according to our strategy is deleted from the FIFO list and the server.
+        Arguments : None
+        Return : None
+        """
+        self.server_1_DB.insert(0, image_name)
+        if len(self.server_1_DB) > DB_SIZE_1:
+            file_to_delete = self.server_1_DB.pop(DB_SIZE_1) #Removes exceeding file name from list
+            print("Deleting "+ str(file_to_delete)+"from Server 1 DataBase.")
+            os.remove( os.path.join(SERVER_BASE_1, file_to_delete))
+            self.notify_server_2(deleted=[file_to_delete])
+
+        print("Updated FIFO list:", self.server_1_DB)
+
+
     def load_cache_table(self):
         with open(CACHE_TABLE_1, "r") as f:
             return json.load(f)
@@ -39,7 +74,20 @@ class CustomHandler(http.server.BaseHTTPRequestHandler):
         except Exception as e:
             print(f"Error notifying Server 2: {e}")
 
+    def do_GET(self):
+        if self.path == "/client_1.py":  # Adjust the path to match your request
+            self.send_response(200)
+            self.send_header("Content-type", "text/html; charset=utf-8")
+            self.end_headers()
+            with open("client_1.py", "r", encoding="utf-8") as client_file:
+                self.wfile.write(client_file.read().encode("utf-8"))
+        else:
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write(b"Not Found.")
+
     def do_POST(self):
+
         if self.path == "/server_1.py":
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length).decode('utf-8')
@@ -48,15 +96,18 @@ class CustomHandler(http.server.BaseHTTPRequestHandler):
             image_name = form.get("name", [None])[0]
             if image_name:
                 local_image_path = os.path.join(SERVER_BASE_1, image_name)
-                server_DB_1 = os.listdir(SERVER_BASE_1)
+                #server_DB_1 = os.listdir(SERVER_BASE_1)
 
-                if os.path.isfile(local_image_path):
+                if os.path.isfile(local_image_path): #checks if the image exists locally
+                    print("Image ", image_name, "exists locally.")
                     self.send_response(200)
                     self.send_header("Content-type", "image/jpeg")
                     self.end_headers()
                     with open(local_image_path, "rb") as image_file:
                         self.wfile.write(image_file.read())
                     print(f"Served image {image_name} from local storage.")
+                    self.server_1_DB.insert(0, self.server_1_DB.pop(self.server_1_DB.index(image_name))) #updates FIFO list
+                    print("Files present in the caching server after serving the request:", self.server_1_DB)
                     return
 
                 cache_table = self.load_cache_table()
@@ -71,11 +122,12 @@ class CustomHandler(http.server.BaseHTTPRequestHandler):
                         self.wfile.write(response.content)
                         print(f"Retrieved image {image_name} from Server 2.")
 
-                        server_DB_1.append(image_name)
+                        self.update_FIFO_file_list(image_name)
+                        """server_DB_1.append(image_name)
                         if len(server_DB_1) > DB_SIZE_1:
                             file_to_delete = server_DB_1.pop(0)
-                            os.remove(os.path.join(SERVER_BASE_1, file_to_delete))
-                            self.notify_server_2(deleted=[file_to_delete])
+                            os.remove(os.path.join(SERVER_BASE_1, file_to_delete))"""
+                            
                         self.notify_server_2(added=[image_name])
                         return
 
@@ -89,11 +141,12 @@ class CustomHandler(http.server.BaseHTTPRequestHandler):
                     self.wfile.write(response.content)
                     print(f"Retrieved image {image_name} from Central Server.")
 
-                    server_DB_1.append(image_name)
+                    self.update_FIFO_file_list(image_name)
+                    """server_DB_1.append(image_name)
                     if len(server_DB_1) > DB_SIZE_1:
                         file_to_delete = server_DB_1.pop(0)
                         os.remove(os.path.join(SERVER_BASE_1, file_to_delete))
-                        self.notify_server_2(deleted=[file_to_delete])
+                        self.notify_server_2(deleted=[file_to_delete])"""
                     self.notify_server_2(added=[image_name])
                 else:
                     self.send_response(404)
