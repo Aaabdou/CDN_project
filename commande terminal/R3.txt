@@ -1,0 +1,23 @@
+en
+conf t
+int g1/0
+	ip address 137.8.7.1 255.255.255.0
+	no shutdown
+exit
+
+int g2/0
+	ip address 133.8.7.2 255.255.255.0
+	no shutdown
+exit
+
+int g3/0
+	ip address 194.0.1.1 255.255.255.0
+	no shutdown
+exit
+
+router bgp 64072
+	neighbor 133.8.7.1 remote-as 64007
+	neighbor 194.0.1.2 remote-as 64073
+	network 137.8.7.0 mask 255.255.255.0
+exit
+do sh run

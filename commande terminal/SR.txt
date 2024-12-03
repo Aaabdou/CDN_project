@@ -1,0 +1,4 @@
+ip 194.0.2.2 194.0.2.1
+
+ip addr add 194.0.2.2/24 dev eth0
+route add default gw 194.0.2.1

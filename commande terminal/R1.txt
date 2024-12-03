@@ -1,0 +1,25 @@
+en
+conf t
+int g1/0
+	ip addr 194.0.7.2 255.255.255.0
+	no shutdown
+	exit
+int g2/0
+	ip addr 133.8.7.1 255.255.255.0
+	no shutdown
+	exit
+int g3/0
+	ip addr 194.0.8.1 255.255.255.0
+	no shutdown
+	exit
+int g4/0
+	ip addr 194.0.3.2 255.255.255.0
+	no shutdown
+	exit
+router bgp 64007
+	neighbor 194.0.8.2 remote-as 64007
+	network 194.0.8.0 mask 255.255.255.0
+	neighbor 133.8.7.2 remote-as 64072
+	network 133.8.7.0 mask 255.255.255.0
+	neighbor 194.0.3.1 remote-as 64000
+exit
