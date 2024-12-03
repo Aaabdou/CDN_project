@@ -1,1 +1,4 @@
 ip 137.8.7.2 137.8.7.1
+
+ip addr add 137.8.7.2/24 dev eth0
+route add default gw 137.8.7.1
