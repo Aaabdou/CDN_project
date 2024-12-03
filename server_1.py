@@ -5,8 +5,8 @@ import json
 from urllib.parse import parse_qs
 
 PORT = 8888
-CENTRAL_SERVER_URL = "http://localhost:8889/get_image"
-SERVER_2_URL = "http://localhost:8887/server_2.py"
+CENTRAL_SERVER_URL = "http://194.0.2.2:8889/get_image"
+SERVER_2_URL = "http://194.0.6.2:8887/server_2.py"
 SERVER_BASE_1 = "server_base_1"
 DB_SIZE_1 = 5
 CACHE_TABLE_1 = "cache_table_1.json"
