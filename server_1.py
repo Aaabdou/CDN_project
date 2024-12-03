@@ -20,23 +20,33 @@ if not os.path.exists(CACHE_TABLE_1):
 class CustomHandler(http.server.BaseHTTPRequestHandler):
 
     server_1_DB = os.listdir(SERVER_BASE_1)
+    
+    @classmethod
+    def db_init(cls):
+        """Initialise the server's database by emptying it if necessary. 
+        Initialise caching information from other servers"""
+        
+        while len(cls.server_1_DB) > 0 : 
+            file_to_delete = cls.server_1_DB.pop(0)
+            os.remove(os.path.join(SERVER_BASE_1, file_to_delete))
 
-    """Initialise the server's database by checking if it has an appropriate number of file. If not, arbitrarly 
-    remove excedent files."""
-    server_1_DB = os.listdir(SERVER_BASE_1)
-    while len(server_1_DB) > DB_SIZE_1 : 
-        file_to_delete = server_1_DB.pop(0)
-        os.remove( os.path.join(SERVER_BASE_1, file_to_delete))
+        cls.update_cache_table(cls, table={})
 
-    print("Initial DB state:", server_1_DB)
+        
+        print("Initial DB state:", cls.server_1_DB)
+    
+    """def get_init_messages(slf, target_url):
+        """"""Ping the other server to get its initial db state""""""
+        try:
+            response = requests.get(f"{target_url}/ping")
+            if response.status_code == 200:
+                print(f"Ping successful! Response from {target_url}: {response.text}")
+                #self.notify_other_server(target_url)
+            else:
+                print(f"Ping failed with status code {response.status_code}")
+        except requests.exceptions.ConnectionError:
+            print(f"Failed to connect to {target_url}")"""
 
-    """def _init_(self):
-        Initialise the server's database by checking if it has an appropriate number of file. If not, arbitrarly 
-        remove excedent files.
-        while len(self.server_1_DB) > DB_SIZE_1 : 
-            self.server_1_DB.pop(0)
-
-        print("Initial DB state:", self.server_1_DB)"""
 
     def update_FIFO_file_list(self, image_name):
         """If the Database has reached the maximum number of files stored given by DB_SIZE_1, the oldest file 
@@ -62,8 +72,8 @@ class CustomHandler(http.server.BaseHTTPRequestHandler):
         with open(CACHE_TABLE_1, "w") as f:
             json.dump(table, f)
 
-    def notify_server_2(self, added=None, deleted=None):
-        update_data = {"added": added or [], "deleted": deleted or []}
+    def notify_server_2(self, added=None, deleted=None, init = False):
+        update_data = {"added": added or [], "deleted": deleted or [], "init": init}
         try:
             response = requests.post(
                 SERVER_2_URL.replace("/server_2.py", "") + "/storage_update",
@@ -88,6 +98,8 @@ class CustomHandler(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
 
+        global CACHE_TABLE_1_INIT
+
         if self.path == "/server_1.py":
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length).decode('utf-8')
@@ -111,6 +123,14 @@ class CustomHandler(http.server.BaseHTTPRequestHandler):
                     return
 
                 cache_table = self.load_cache_table()
+                """if CACHE_TABLE_1_INIT==False :
+                    cache_table.clear()
+                    try:
+                        self.get_init_messages(SERVER_2_URL)
+                        CACHE_TABLE_1_INIT = True
+                    except:
+                        print("Could not get initialisation info from Server 2")"""
+
                 if image_name in cache_table:
                     response = requests.post(SERVER_2_URL, data={"name": image_name})
                     if response.status_code == 200:
@@ -123,11 +143,6 @@ class CustomHandler(http.server.BaseHTTPRequestHandler):
                         print(f"Retrieved image {image_name} from Server 2.")
 
                         self.update_FIFO_file_list(image_name)
-                        """server_DB_1.append(image_name)
-                        if len(server_DB_1) > DB_SIZE_1:
-                            file_to_delete = server_DB_1.pop(0)
-                            os.remove(os.path.join(SERVER_BASE_1, file_to_delete))"""
-                            
                         self.notify_server_2(added=[image_name])
                         return
 
@@ -142,11 +157,6 @@ class CustomHandler(http.server.BaseHTTPRequestHandler):
                     print(f"Retrieved image {image_name} from Central Server.")
 
                     self.update_FIFO_file_list(image_name)
-                    """server_DB_1.append(image_name)
-                    if len(server_DB_1) > DB_SIZE_1:
-                        file_to_delete = server_DB_1.pop(0)
-                        os.remove(os.path.join(SERVER_BASE_1, file_to_delete))
-                        self.notify_server_2(deleted=[file_to_delete])"""
                     self.notify_server_2(added=[image_name])
                 else:
                     self.send_response(404)
@@ -163,6 +173,8 @@ class CustomHandler(http.server.BaseHTTPRequestHandler):
                 update_data = json.loads(update_data)
                 cache_table = self.load_cache_table()
 
+                if update_data.get("init"):
+                    cache_table.clear()
                 for added in update_data.get("added", []):
                     cache_table[added] = "server_2"
                 for deleted in update_data.get("deleted", []):
@@ -180,4 +192,5 @@ class CustomHandler(http.server.BaseHTTPRequestHandler):
 server_address_1 = ("", PORT)
 httpd = http.server.HTTPServer(server_address_1, CustomHandler)
 print(f"Server 1 active on port {PORT}")
+CustomHandler.db_init()
 httpd.serve_forever()
