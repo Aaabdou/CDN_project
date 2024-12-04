@@ -21,7 +21,10 @@ int g5/0
 	ip addr 194.0.4.2 255.255.255.0
 	no shutdown
 	exit	
-	
+int g6/0
+	ip addr 194.0.6.1 255.255.255.0
+	no shutdown
+	exit
 
 router bgp 64007
 	neighbor 194.0.8.1 remote-as 64007
@@ -29,5 +32,6 @@ router bgp 64007
 	neighbor 193.8.7.2 remote-as 64071
 	neighbor 194.0.4.1 remote-as 64000
 	network 194.0.7.0 mask 255.255.255.0
+	network 194.0.6.0 mask 255.255.255.0
 	network 194.0.8.0 mask 255.255.255.0
 	exit

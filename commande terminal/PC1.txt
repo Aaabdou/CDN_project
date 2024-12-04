@@ -2,3 +2,6 @@ ip 137.8.7.2 137.8.7.1
 
 ip addr add 137.8.7.2/24 dev eth0
 route add default gw 137.8.7.1
+
+curl http://194.0.7.1:8888/client_1.py
+curl -X POST -d "name=chat1" http://194.0.7.1:8888/server_1.py

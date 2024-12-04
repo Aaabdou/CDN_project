@@ -3,6 +3,10 @@ import http.server
 import os
 import cgitb
 from urllib.parse import urlparse, parse_qs  # Use urllib.parse for query strings
+import subprocess
+
+subprocess.run(["ip","addr","add","194.0.2.2/24","dev","eth0"])
+subprocess.run(["route","add","default","gw","194.0.2.1"])
 
 cgitb.enable()
 
@@ -21,14 +25,16 @@ class CentralHandler(http.server.CGIHTTPRequestHandler):
 
             # Path to the image in central_base
             central_image_path = os.path.join(CENTRAL_BASE, image_name) if image_name else None
-
+            
             if image_name and os.path.isfile(central_image_path):
+                print(f"Request from {self.client_address[0]} for {image_name}")
                 # Serve the requested image
                 self.send_response(200)
                 self.send_header("Content-type", "image/jpeg")
                 self.end_headers()
                 with open(central_image_path, "rb") as image_file:
                     self.wfile.write(image_file.read())
+                print(f"\tSuccessful!")
             else:
                 # Image not found on central server
                 self.send_response(404)
@@ -37,6 +43,7 @@ class CentralHandler(http.server.CGIHTTPRequestHandler):
                 self.wfile.write(b"<h1>404 Not Found</h1>")
                 if image_name:
                     self.wfile.write(f"<p>The image '{image_name}' was not found on the central server.</p>".encode("utf-8"))
+                print(f"Request from {self.client_address[0]} for {image_name} not found")
         else:
             # Handle other paths
             self.send_response(404)

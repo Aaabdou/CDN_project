@@ -1,0 +1,112 @@
+!
+!
+
+!
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+!
+hostname R1
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+ip cef
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+no ipv6 cef
+!
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+ip tcp synwait-time 5
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface FastEthernet0/0
+ no ip address
+ shutdown
+ duplex full
+!
+interface GigabitEthernet1/0
+ ip address 194.0.7.2 255.255.255.0
+ negotiation auto
+!
+interface GigabitEthernet2/0
+ ip address 133.8.7.1 255.255.255.0
+ negotiation auto
+!
+interface GigabitEthernet3/0
+ ip address 194.0.8.1 255.255.255.0
+ negotiation auto
+!
+interface GigabitEthernet4/0
+ ip address 194.0.3.2 255.255.255.0
+ negotiation auto
+!
+interface GigabitEthernet5/0
+ ip address 194.0.5.1 255.255.255.0
+ negotiation auto
+!
+router bgp 64007
+ bgp log-neighbor-changes
+ network 133.8.7.0 mask 255.255.255.0
+ network 194.0.5.0
+ network 194.0.8.0
+ neighbor 133.8.7.2 remote-as 64072
+ neighbor 194.0.3.1 remote-as 64000
+ neighbor 194.0.8.2 remote-as 64007
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+!
+!
+!
+!
+control-plane
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+!
+!
+end
