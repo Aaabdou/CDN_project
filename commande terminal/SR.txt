@@ -2,3 +2,25 @@ ip 194.0.2.2 194.0.2.1
 
 ip addr add 194.0.2.2/24 dev eth0
 route add default gw 194.0.2.1
+
+
+mv chat1.jpg central_base/
+mv chat2.jpg central_base/
+mv chat3.jpg central_base/
+mv chat4.jpg central_base/
+mv chat5.jpg central_base/
+mv chat6.jpg central_base/
+mv chat7.jpg central_base/
+mv chat8.jpg central_base/
+mv chat9.jpg central_base/
+mv chat10.jpg central_base/
+mv chat11.jpg central_base/
+mv chat12.jpg central_base/
+mv chat13.jpg central_base/
+mv chat14.jpg central_base/
+mv chat15.jpg central_base/
+mv chat16.jpg central_base/
+mv chat17.jpg central_base/
+mv chat18.jpg central_base/
+mv chat19.jpg central_base/
+mv chat20.jpg central_base/

@@ -6,12 +6,13 @@ from urllib.parse import parse_qs
 import subprocess
 
 subprocess.run(["ip","addr","add","194.0.7.1/24","dev","eth0"])
-subprocess.run(["route","add","default","gw","194.0.7.2"])
+subprocess.run(["route","add","default","gw","194.0.7.3"])
 subprocess.run(["ip","addr","add","194.0.6.2/24","dev","eth1"])
-subprocess.run(["route","add","default","gw","194.0.6.1"])
+subprocess.run(["route","add","-net","194.0.5.0","netmask","255.255.255.0","gw","194.0.6.1","dev","eth1"])
+subprocess.run(["route","add","-net","194.0.2.0","netmask","255.255.255.0","gw","194.0.6.1","dev","eth1"])
 PORT = 8888
 CENTRAL_SERVER_URL = "http://194.0.2.2:8889/get_image"
-SERVER_1_URL = "http://194.0.5.2:8888/server_1.py"
+SERVER_1_URL = "http://194.0.5.2:8888/server.py"
 SERVER_BASE_2 = "server_base_2"
 DB_SIZE_2 = 3
 CACHE_TABLE_2 = "cache_table_2.json"
@@ -64,7 +65,7 @@ class CustomHandler(http.server.BaseHTTPRequestHandler):
         update_data = {"added": added or [], "deleted": deleted or [], "init": init}
         try:
             response = requests.post(
-                SERVER_1_URL.replace("/server_1.py", "") + "/storage_update",
+                SERVER_1_URL.replace("/server.py", "") + "/storage_update",
                 headers={"Content-Type": "application/json"},
                 json=update_data
             )
@@ -73,14 +74,14 @@ class CustomHandler(http.server.BaseHTTPRequestHandler):
             print(f"Error notifying Server 1: {e}")
     
     def do_GET(self):
-        if self.path == "/client_2.py":  # Adjust the path to match your request
+        if self.path == "/client.py":  # Adjust the path to match your request
             self.send_response(200)
             self.send_header("Content-type", "text/html; charset=utf-8")
             self.end_headers()
             with open("client_2.py", "r", encoding="utf-8") as client_file:
                 self.wfile.write(client_file.read().encode("utf-8"))
             
-        elif self.path == "/server_2.py/ping":
+        elif self.path == "/server.py/ping":
             self.send_response(200)
             self.end_headers()
             self.wfile.write(b"Pong from server B")
@@ -94,7 +95,7 @@ class CustomHandler(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
 
-        if self.path == "/server_2.py":
+        if self.path == "/server.py":
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length).decode('utf-8')
             form = parse_qs(post_data)
@@ -177,7 +178,7 @@ class CustomHandler(http.server.BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.end_headers()
                 self.wfile.write(b"Cache table updated.")
-                print(f"\tCache table updated, {self.server_2_DB}")
+                print(f"\tCache table updated, {cache_table}")
             except json.JSONDecodeError:
                 self.send_response(400)
                 self.end_headers()
